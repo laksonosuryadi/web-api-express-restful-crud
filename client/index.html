@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script
+    src="https://code.jquery.com/jquery-3.2.1.js"
+    integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+    crossorigin="anonymous"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.1/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.1/js/materialize.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title></title>
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="row">
+        <form class="col s12">
+          <div class="row">
+            <h1>MEMO</h1>
+            <div class="col s6">
+              <div class="input-field">
+                <label for="memoTitle">Title</label>
+                <input id="memoTitle" type="text" class="validate">
+              </div>
+              <div class="input-field">
+                <label for="memoContent">Content</label>
+                <input id="memoContent" type="text" class="validate">
+              </div>
+              <a class="btn-floating btn-large waves-effect waves-light red" onclick="addMemo()"><i class="material-icons">add</i></a>
+            </div>
+            <br><br>
+          </div>
+        </form>
+
+        <table>
+          <thead>
+            <tr>
+              <th>memo._id</th>
+              <th>title</th>
+              <th>content</th>
+              <th>edit</th>
+              <th>delete</th>
+            </tr>
+          </thead>
+          <tbody>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+
+  <script type="text/javascript">
+
+    $.ajax({
+      url: 'http://127.0.0.1:3000/memo',
+      type: 'GET',
+      success: function(memos){
+        for(let i = 0; i < memos.length; i++){
+          $('tbody').append(`
+            <tr class="${memos[i]._id}">
+              <td>${memos[i]._id}</td>
+              <td id="title-${memos[i]._id}">${memos[i].title}</td>
+              <td id="content-${memos[i]._id}">${memos[i].content}</td>
+              <td><a href="#modal${memos[i]._id}" onclick="popup()" class="btn-floating btn-large waves-effect waves-light green modal-trigger"><i class="material-icons">edit</i></a>
+              <div id="modal${memos[i]._id}" class="modal">
+                <div class="modal-content">
+                    <div class="input-field">
+                      <label for="memoTitle">Title</label>
+                      <input id="editTitle-${memos[i]._id}" type="text" class="validate" value="${memos[i].title}">
+                    </div>
+                    <div class="input-field">
+                      <label for="memoContent">Content</label>
+                      <input id="editContent-${memos[i]._id}" type="text" class="validate" value="${memos[i].content}">
+                    </div>
+                    <a class="btn-floating btn-large waves-effect waves-light red" onclick="edit('${memos[i]._id}')"><i class="material-icons blue">done</i></a>
+                  </div>
+                  <div class="modal-footer">
+                    <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">close</a>
+                  </div>
+                </div></td>
+              <td><a href="#" onclick="del('${memos[i]._id}')" class="btn-floating btn-large waves-effect waves-light brown"><i class="material-icons">delete</i></a></td>
+            </tr>
+          `)
+        }
+      }
+    })
+
+    function addMemo() {
+      $.ajax({
+        url: 'http://127.0.0.1:3000/memo/',
+        type: 'POST',
+        data: {
+          title: $('#memoTitle').val(),
+          content: $('#memoContent').val()
+        },
+        success: function (memo) {
+          $('tbody').append(`
+            <tr class="${memo._id}">
+              <td>${memo._id}</td>
+              <td id="title-${memo._id}">${memo.title}</td>
+              <td id="content-${memo._id}">${memo.content}</td>
+              <td><a href="#modal${memo._id}" onclick="popup()" class="btn-floating btn-large waves-effect waves-light green modal-trigger"><i class="material-icons">edit</i></a>
+              <div id="modal${memo._id}" class="modal">
+                <div class="modal-content">
+                    <div class="input-field">
+                      <label for="memoTitle">Title</label>
+                      <input id="editTitle-${memo._id}" type="text" class="validate" value="${memo.title}">
+                    </div>
+                    <div class="input-field">
+                      <label for="memoContent">Content</label>
+                      <input id="editContent-${memo._id}" type="text" class="validate" value="${memo.content}">
+                    </div>
+                    <a class="btn-floating btn-large waves-effect waves-light red" onclick="edit('${memo._id}')"><i class="material-icons blue">done</i></a>
+                  </div>
+                  <div class="modal-footer">
+                    <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">close</a>
+                  </div>
+                </div></td>
+              <td><a href="#" onclick="del('${memo._id}')" class="btn-floating btn-large waves-effect waves-light brown"><i class="material-icons">delete</i></a></td>
+            </tr>
+          `)
+        }
+      })
+    }
+
+    function popup(){
+      $('.modal').modal();
+    }
+
+    function edit(id) {
+      $(`#modal${id}`).modal('close');
+      $.ajax({
+        url: `http://127.0.0.1:3000/memo/${id}`,
+        type: 'PUT',
+        data: {
+          title: $(`#editTitle-${id}`).val(),
+          content: $(`#editContent-${id}`).val()
+        },
+        success: function(){
+          $(`#title-${id}`).html($(`#editTitle-${id}`).val())
+          $(`#content-${id}`).html($(`#editContent-${id}`).val())
+        }
+      })
+    }
+
+    function del(id){
+      var confirmation = confirm('Are you sure want to DELETE this Memo?')
+      if (confirmation == true){
+        $.ajax({
+          url: `http://127.0.0.1:3000/memo/${id}`,
+          type: 'DELETE',
+          success: function(memo){
+            console.log("Deleted!")
+            $(`.${id}`).remove()
+          }
+        })
+      } else {
+        alert("Deleting Memo Cancelled")
+      }
+    }
+
+  </script>
+
+</html>
